@@ -9,16 +9,29 @@ services:
     # Change the <xxx> to the correct values to reflect your environment
     environment:
       - TZ=Asia/Kolkata
+      
       - GUNICORN_ARG_WORKERS=<Number of workers to be used, normally 2 * number of CPU cores; integer>
       - GUNICORN_ARG_THREADS=<Number of threads to be used, normally 2 * number of workers; integer>
       - GUNICORN_ARG_TIMEOUT=<Timeout for the request; integer>
-      - GUNICORN_ARG_BIND_PORT=<Port to bind the application; integer>
-      - POSTGRES_DB_USERNAME=<Postgres database username; string>
-      - POSTGRES_DB_PASSWORD=<Postgres database password; string>
-      - POSTGRES_DB_HOST=<Postgres database host; string>
-      - POSTGRES_DB_PORT=<Postgres database port; integer>
-      - POSTGRES_DB_DATABASE=<Postgres database name; string>
-      - LOG_LEVEL=<Log level in the api; integer>
+      - GUNICORN_ARG_BIND_PORT=8086
+
+      - POSTGRES_DB_USERNAME=neko_nik
+      - POSTGRES_DB_PASSWORD=Neko-Nik
+      - POSTGRES_DB_HOST=nikl-pg-db
+      - POSTGRES_DB_PORT=5432
+      - POSTGRES_DB_DATABASE=nik_lang
+      # The POSTGRES_DB_URI is optional, if provided it will override the other Postgres environment variables
+      # - POSTGRES_DB_URI=postgresql://<username>:<password>@<host>:<port>/<database>
+      - POSTGRES_POOL_SIZE=10
+
+      - MEMCACHED_DB_HOST=cache-db
+      - MEMCACHED_DB_PORT=11211
+      - MEMCACHED_DB_POOL_SIZE=10
+      # Session expiry time in seconds (default is 3 x 60 x 60 = 10800 = 3 hours)
+      - MAX_AGE_OF_CACHE=10800
+
+      # API Logging configuration
+      - LOG_LEVEL=20
 
     # The ports are used to expose the application to the host machine
     ports:
@@ -36,15 +49,22 @@ services:
     # The restart policy is set to always to restart the container in case of failure
     restart: always
 
-  postgres-database:
+  nikl-pg-db:
     image: postgres:16
-    container_name: postgres-database
+    container_name: nikl-pg-db
     environment:
-      - POSTGRES_PASSWORD=<Postgres database password; string>
-      - POSTGRES_USER=<Postgres database username; string>
-      - POSTGRES_DB=<Postgres database name; string>
+      - POSTGRES_PASSWORD=Neko-Nik
+      - POSTGRES_USER=Neko_Nik
+      - POSTGRES_DB=nik_lang
     volumes:
       - /data/nikl-pkg-db:/var/lib/postgresql/data
+    restart: always
+    networks:
+      - nikl_pkg_network
+
+  cache-db:
+    image: memcached:1.6
+    container_name: cache-db
     restart: always
     networks:
       - nikl_pkg_network

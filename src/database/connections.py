@@ -1,48 +1,155 @@
 """
-This file contains the database connection and session creation functions
+This module manages the database connections for PostgreSQL and Memcached.
+It includes the following components:
+1. **PostgreSQL Database Connection**: 
+   - A class `Database` that manages the connection pool for PostgreSQL.
+   - It provides methods to create a connection pool, acquire a connection, and close the pool.
+2. **Memcached Database Connection**:
+    - A class `MemcachedClient` that manages the connection to Memcached.
+    - It provides methods to initialize the client, close the client, and get the client instance.
+3. **Dependency Injection**:
+    - `get_db` and `get_cache_client` functions that provide the PostgreSQL and Memcached clients respectively.
+4. **Lifespan Context Manager**:
+    - A context manager `lifespan` that initializes and closes the database connections when the FastAPI application starts and stops.
 """
 
-from src.utils.base.libraries import create_engine, sessionmaker, Depends, status, APIKeyHeader
-from src.utils.base.constants import POSTGRES_DB_DATABASE, POSTGRES_DB_HOST, POSTGRES_DB_PASSWORD, POSTGRES_DB_PORT, POSTGRES_DB_USERNAME, INTERNAL_API_KEY
-from src.utils.models import Base, All_Exceptions
+from src.utils.base.libraries import Depends, status, asyncpg, aiomcache, logging, asynccontextmanager, Annotated, AsyncGenerator, Optional, FastAPI
+from src.utils.base.constants import POSTGRES_DB_URI, POSTGRES_POOL_SIZE, MEMCACHED_DB_HOST, MEMCACHED_DB_PORT, MEMCACHED_DB_POOL_SIZE
+from src.utils.models import All_Exceptions
 
 
-# For SQLite local database
-SQLALCHEMY_DATABASE_URL = "sqlite:///./sql_app.db"
-engine = create_engine(url=SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
+# ======= PostgreSQL DB Connection =======
 
-# For Postgres database (production)
-# engine = create_engine(url=f"postgresql://{POSTGRES_DB_USERNAME}:{POSTGRES_DB_PASSWORD}@{POSTGRES_DB_HOST}:{POSTGRES_DB_PORT}/{POSTGRES_DB_DATABASE}")
+class Database:
+    """PostgreSQL database connection pool manager"""
+    def __init__(self):
+        """Initialize the database connection pool"""
+        self.pool = None
 
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+    async def create_pool(self):
+        """Create connection pool if it doesn't exist"""
+        if self.pool is None:
+            try:
+                self.pool = await asyncpg.create_pool(
+                    POSTGRES_DB_URI,
+                    min_size=int(POSTGRES_POOL_SIZE / 2),
+                    max_size=POSTGRES_POOL_SIZE,
+                    max_inactive_connection_lifetime=300   # 5 minutes
+                )
+                logging.debug("PostgreSQL connection pool created successfully")
+
+            except asyncpg.exceptions.PostgresError as e:
+                logging.error(f"Error creating PostgreSQL connection pool: {e}")
+                raise ValueError("Failed to create PostgreSQL connection pool")
+
+            except Exception as e:
+                logging.error(f"Unexpected error while creating connection pool: {e}", exc_info=True)
+                raise
+
+    @asynccontextmanager
+    async def get_connection(self) -> AsyncGenerator[asyncpg.Connection, None]:
+        """Get database connection from pool"""
+        if not self.pool:
+            await self.create_pool()
+        async with self.pool.acquire() as connection:
+            logging.info("Pool of connections acquired for PostgreSQL DB successfully")
+            yield connection
+            logging.info("Connection released back to the pool")
+
+    async def close(self):
+        """Close the pool when shutting down"""
+        if self.pool:
+            await self.pool.close()
+            logging.debug("PostgreSQL connection pool closed successfully")
+            self.pool = None
 
 
-def _validate_key(api_key: str) -> None:
-    if api_key != INTERNAL_API_KEY:
+db = Database()
+
+
+async def get_db() -> AsyncGenerator[asyncpg.Connection, None]:
+    async with db.get_connection() as conn:
+        yield conn
+
+
+PostgresDep = Annotated[asyncpg.Connection, Depends(get_db)]
+
+
+# ======= Memcached DB Connection =======
+
+class MemcachedClient:
+    client: Optional[aiomcache.Client] = None
+
+    @classmethod
+    async def initialize(cls):
+        """Initialize the Memcached client with connection pooling"""
+        if not cls.client:
+            cls.client = aiomcache.Client(
+                host=MEMCACHED_DB_HOST,
+                port=int(MEMCACHED_DB_PORT),
+                pool_minsize=int(MEMCACHED_DB_POOL_SIZE / 2),
+                pool_size=int(MEMCACHED_DB_POOL_SIZE)
+            )
+
+    @classmethod
+    async def close(cls):
+        """Close the Memcached client"""
+        if cls.client:
+            await cls.client.close()
+            cls.client = None
+
+    @classmethod
+    def get_client(cls) -> aiomcache.Client:
+        """Get the Memcached client instance"""
+        if not cls.client:
+            raise All_Exceptions(
+                message="Memcached client is not initialized",
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE
+            )
+        return cls.client
+
+
+async def get_cache_client() -> AsyncGenerator[aiomcache.Client, None]:
+    """Dependency for getting Memcached client"""
+    client = MemcachedClient.get_client()
+    try:
+        yield client
+    except aiomcache.exceptions.ClientException as e:
         raise All_Exceptions(
-            message="Invalid API Key!",
-            status_code=status.HTTP_401_UNAUTHORIZED
+            message=f"Memcached error: {str(e)}",
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE
         )
 
 
-def init_db():
-    """
-    Function to initialize the database
-    """
-    Base.metadata.create_all(bind=engine, checkfirst=True)
-    # Registering event listeners on specific models to handle database events like insert, update, delete here
+MemcachedDep = Annotated[aiomcache.Client, Depends(get_cache_client)]
 
 
-def get_db(api_key: str = Depends(APIKeyHeader(name="N-Api-Key"))):
-    """
-    Function to get the database session
-    Used in the FastAPI dependency injection system
-    """
-    # Validating the API key (Integrating API key validation)
-    _validate_key(api_key=api_key)
-    # Creating a new session for each request
-    db = SessionLocal()
+# ======= Lifespan Context Manager =======
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Lifespan context manager for database connection"""
+    logging.info("Initializing all database connections (PostgreSQL and Memcached)")
     try:
-        yield db
+        # Initialize PostgreSQL connection pool
+        logging.debug("Beginning to create database pool")
+        await db.create_pool()
+        logging.info("PostgreSQL Db pool created successfully")
+
+        # Initialize Memcached connection pool
+        logging.debug("Beginning to create Memcached pool")
+        await MemcachedClient.initialize()
+        logging.info("Memcached pool created successfully")
+
+        yield
+
+    except Exception as e:
+        logging.error(f"Error during lifespan initialization: {e}", exc_info=True)
+        raise
+
     finally:
-        db.close()
+        # Shutdown: close all connections
+        logging.debug("Shutting down all database connections")
+        await db.close()
+        await MemcachedClient.close()
+        logging.info("All database connections closed successfully")

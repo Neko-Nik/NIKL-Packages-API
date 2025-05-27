@@ -2,24 +2,22 @@
 All the Database related functions are defined here
 """
 
-from .connections import init_db, get_db
-from .handler import sample_data_insertion
+from .connections import PostgresDep, MemcachedDep, lifespan
 
 
-__version__ = "v1.0.0-phoenix-release"
+__version__ = "v2.8.0-phoenix-release"
 
 
 __annotations__ = {
     "version": __version__,
-    "init_db": "Function to initialize the database",
-    "get_db": "Function to get the database session",
-    "sample_data_insertion": "Function to insert sample data in the database"
+    "PostgresDep": "PostgresSQL connection dependency for FastAPI",
+    "MemcachedDep": "Memcached connection dependency for FastAPI",
+    "lifespan": "Lifespan context manager for FastAPI to manage database connections"
 }
 
 
 __all__ = [
-    "__version__",
-    "init_db",
-    "get_db",
-    "sample_data_insertion"
+    "PostgresDep",
+    "MemcachedDep",
+    "lifespan"
 ]

@@ -9,9 +9,9 @@ from src.utils.base.libraries import (
     FastAPI,
     Request
 )
-from .routers import neko_router
+from .routers import users_router
 from src.utils.models import All_Exceptions
-from src.database import init_db
+from src.database import lifespan
 
 
 # Initialization
@@ -24,8 +24,8 @@ app = FastAPI(
     docs_url="/docs",
     redoc_url="/redoc",
     include_in_schema=True,
+    lifespan=lifespan
 )
-init_db()
 
 # Add CROCS middle ware to allow cross origin requests
 app.add_middleware(
@@ -46,4 +46,4 @@ async def input_data_exception_handler(request: Request, exc: All_Exceptions):
 
 
 #    Endpoints    #
-app.include_router(router=neko_router, prefix="/neko")
+app.include_router(router=users_router, prefix="/users")

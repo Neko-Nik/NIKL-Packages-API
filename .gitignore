@@ -24,3 +24,4 @@ logs/
 
 # Other Ignore Files/Paths should be added here
 *.db
+.env

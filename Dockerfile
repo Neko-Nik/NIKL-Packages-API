@@ -12,12 +12,6 @@ ENV GUNICORN_ARG_TIMEOUT 250
 ENV GUNICORN_ARG_BIND_PORT 8086
 ENV LOG_LEVEL 20
 
-# Update the package lists
-RUN apt-get update
-
-# Install essential packages
-RUN apt-get install -y gcc python3.12-dev
-
 # Copy requirements files to do pip install
 COPY requirements.txt .
 
