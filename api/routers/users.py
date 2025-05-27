@@ -28,3 +28,18 @@ async def add_sample_data(request: Request, data: dict, bg_task: BackgroundTasks
         status_code=status.HTTP_202_ACCEPTED,
         content={"message": "Sample data added in the database"}
     )
+
+# For initial version we will keep all things simple (Keep it simple stupid)
+
+# TODO: User Management
+# - Create new user (Registration) with email verification and captcha
+# - Login user with username and password (not email)
+# - Validate session 
+# - Logout user
+
+# - Get user profile details
+# - Update user profile details
+# - Delete user and all related data
+
+# - Generate API key for user
+# - Validate API key
