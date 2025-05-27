@@ -3,15 +3,15 @@ name: Docker Image CI
 on:
   push:
     branches:
-      - "main"
+      - "master"
     tags:
       - "*"
   pull_request:
     branches:
-      - main
+      - "master"
 
 jobs:
-  docker:
+  build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -35,7 +35,11 @@ jobs:
         with:
           context: .
           platforms: linux/amd64,linux/arm64
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
           push: true
+          sbom: true
+          provenance: true
           tags: |
-            xxx/xxx:latest
-            xxx/xxx:${{ steps.tag.outputs.TAG }}
+            neko7nik/nikl-pkg-mgr:latest
+            neko7nik/nikl-pkg-mgr:${{ steps.tag.outputs.TAG }}

@@ -9,15 +9,15 @@ from src.utils.base.libraries import (
     FastAPI,
     Request
 )
-from .routers import logs_router, neko_router
+from .routers import neko_router
 from src.utils.models import All_Exceptions
 from src.database import init_db
 
 
 # Initialization
 app = FastAPI(
-    title="Neko Nik",
-    description="This is the API Template of Neko Nik",
+    title="Nik-Lang Package Management API",
+    description="This is the API for the Nik-Lang Package Management System",
     version="1.0.0",
     # docs_url=None,
     # redoc_url=None,
@@ -46,5 +46,4 @@ async def input_data_exception_handler(request: Request, exc: All_Exceptions):
 
 
 #    Endpoints    #
-app.include_router(router=logs_router, prefix="/logs")
 app.include_router(router=neko_router, prefix="/neko")

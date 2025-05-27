@@ -44,7 +44,7 @@ pip3 install -r requirements.txt
 
 To run the application locally, using Uvicorn or Gunicorn:
 
-Using Uvicorn: `uvicorn api.main:app --reload --port 8086`
+Using Uvicorn: `uvicorn api.main:app --reload --port 8686`
 
 Using Gunicorn: `gunicorn -k uvicorn.workers.UvicornWorker api.main:app`
 

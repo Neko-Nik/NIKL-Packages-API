@@ -19,7 +19,7 @@ TEST*.xml
 
 
 # log files (uncomment to ignore)
-# logs/
+logs/
 
 
 # Other Ignore Files/Paths should be added here

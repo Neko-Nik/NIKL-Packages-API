@@ -11,13 +11,12 @@ ENV GUNICORN_ARG_THREADS 6
 ENV GUNICORN_ARG_TIMEOUT 250
 ENV GUNICORN_ARG_BIND_PORT 8086
 ENV LOG_LEVEL 20
-ENV NUMBER_OF_LOGS_TO_DISPLAY 100
 
 # Update the package lists
 RUN apt-get update
 
 # Install essential packages
-RUN apt-get install -y gcc python3.11-dev
+RUN apt-get install -y gcc python3.12-dev
 
 # Copy requirements files to do pip install
 COPY requirements.txt .
@@ -27,7 +26,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Create direcotry for FastAPI
 RUN mkdir -p /app/src
-RUN mkdir -p /app/templates
 RUN mkdir -p /var/log/api
 
 # Set the working directory
@@ -36,14 +34,13 @@ WORKDIR /app
 # Copy the source code to the working directory
 COPY api/ api/
 COPY src/ src/
-COPY templates/ templates/
 COPY scripts/entry_point.sh .
 
 CMD ["chmod", "+x", "/app/entry_point.sh"]
 
 # Health check for the image
 HEALTHCHECK --interval=30s --timeout=7s --start-period=5s --retries=2 \
-    CMD ["sh", "-c", "curl --fail http://localhost:${GUNICORN_ARG_BIND_PORT}/logs?passwd=neko-nik || exit 1"]
+    CMD ["sh", "-c", "curl --fail http://localhost:${GUNICORN_ARG_BIND_PORT}/docs || exit 1"]
 
 # Run the application using gunicorn
 ENTRYPOINT ["sh", "/app/entry_point.sh"]

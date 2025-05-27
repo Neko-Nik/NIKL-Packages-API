@@ -1,8 +1,8 @@
 services:
-  xxx:
+  nikl-pkg-mgr:
     # The image is available on private docker hub, you can use your own image if you have built it
-    image: xxx/xxx:latest
-    container_name: xxx
+    image: neko7nik/nikl-pkg-mgr:latest
+    container_name: nikl-pkg-mgr
 
     # The environment variables are used to configure the application
     # Use the correct values for the environment variables
@@ -19,7 +19,6 @@ services:
       - POSTGRES_DB_PORT=<Postgres database port; integer>
       - POSTGRES_DB_DATABASE=<Postgres database name; string>
       - LOG_LEVEL=<Log level in the api; integer>
-      - NUMBER_OF_LOGS_TO_DISPLAY=<Number of logs to display in the api; integer>
 
     # The ports are used to expose the application to the host machine
     ports:
@@ -29,10 +28,10 @@ services:
     # LHS is the host machine path and RHS is the container path
     # Change the LHS to the correct path to store the logs (if required)
     volumes:
-      - /var/log/xxx:/var/log/api
+      - /var/log/nikl-pkg-mgr-api:/var/log/api
 
     networks:
-      - internal_network
+      - nikl_pkg_network
 
     # The restart policy is set to always to restart the container in case of failure
     restart: always
@@ -45,11 +44,11 @@ services:
       - POSTGRES_USER=<Postgres database username; string>
       - POSTGRES_DB=<Postgres database name; string>
     volumes:
-      - /var/lib/postgresql/data:/var/lib/postgresql/data
+      - /data/nikl-pkg-db:/var/lib/postgresql/data
     restart: always
     networks:
-      - internal_network
+      - nikl_pkg_network
 
 networks:
-  internal_network:
+  nikl_pkg_network:
     driver: bridge
