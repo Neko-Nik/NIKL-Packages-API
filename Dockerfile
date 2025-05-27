@@ -3,14 +3,14 @@ FROM python:3.12-bookworm
 MAINTAINER "nikhil@nekonik.com"
 
 # No user intraction for this 
-ENV DEBIAN_FRONTEND noninteractive
+ENV DEBIAN_FRONTEND=noninteractive
 
 ## Set them as environment variables so that they can be used in the gunicorn command
-ENV GUNICORN_ARG_WORKERS 6
-ENV GUNICORN_ARG_THREADS 6
-ENV GUNICORN_ARG_TIMEOUT 250
-ENV GUNICORN_ARG_BIND_PORT 8086
-ENV LOG_LEVEL 20
+ENV GUNICORN_ARG_WORKERS=6
+ENV GUNICORN_ARG_THREADS=6
+ENV GUNICORN_ARG_TIMEOUT=250
+ENV GUNICORN_ARG_BIND_PORT=8086
+ENV LOG_LEVEL=20
 
 # Copy requirements files to do pip install
 COPY requirements.txt .
