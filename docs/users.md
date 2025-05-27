@@ -19,3 +19,19 @@ Created user is not active by default, so it will not be able to login until it 
 User needs to be verified before logging in, that is by clicking the verification link sent to the email address.
 
 On UI we do https://www.gravatar.com/ for user profile picture, so we don't store it in the database.
+
+
+```sql
+CREATE TABLE users (
+    id UUID PRIMARY KEY,
+    user_name VARCHAR(100) NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    hashed_password TEXT NOT NULL,
+    profile_data JSONB, -- stores additional profile info as a JSON object
+    is_active BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_users_created_at ON users (created_at);
+CREATE INDEX idx_users_is_active ON users (is_active);
+```
