@@ -173,9 +173,9 @@ async def login_user(request: Request, data: UserLoginForm, CacheDB: MemcachedDe
         value=session_id,
         max_age=MAX_AGE_OF_CACHE,
         httponly=True,
-        # secure=True,
-        # samesite="strict",
-        # domain=".nekonik.com"
+        secure=True,
+        samesite="strict",
+        domain=".nekonik.com"
     )
 
     # Set the logged in status in the Cookie (for JS - to read)
@@ -184,9 +184,9 @@ async def login_user(request: Request, data: UserLoginForm, CacheDB: MemcachedDe
         value="true",
         max_age=MAX_AGE_OF_CACHE,
         httponly=False,  # IMPORTANT: Let JS read it
-        # secure=True,
-        # samesite="strict",
-        # domain=".nekonik.com"
+        secure=True,
+        samesite="strict",
+        domain=".nekonik.com"
     )
 
     # Set the CSRF token in the response header

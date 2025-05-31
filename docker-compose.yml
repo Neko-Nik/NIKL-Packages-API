@@ -24,6 +24,8 @@ services:
       # - POSTGRES_DB_URI=postgresql://<username>:<password>@<host>:<port>/<database>
       - POSTGRES_POOL_SIZE=10
 
+      - HCAPTCHA_SECRET_KEY=<Your hCaptcha secret key; string>
+
       - MEMCACHED_DB_HOST=cache-db
       - MEMCACHED_DB_PORT=11211
       - MEMCACHED_DB_POOL_SIZE=10
