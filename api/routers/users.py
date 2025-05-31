@@ -16,7 +16,7 @@ from src.utils.base.libraries import (
     json,
     logging
 )
-from src.database import PostgresDep, MemcachedDep, create_new_user, get_user_by_name
+from src.database import PostgresDep, MemcachedDep, create_new_user, get_user_by_name, get_user_profile_details_by_id, replace_user_profile_details_by_id, delete_user_by_id
 from src.utils.base.constants import MAX_AGE_OF_CACHE, HCAPTCHA_SECRET_KEY
 from src.utils.models import UserRegForm, UserLoginForm
 from src.main import CurrentUser
@@ -123,11 +123,6 @@ async def login_user(request: Request, data: UserLoginForm, CacheDB: MemcachedDe
 
     # Fetch user from database
     user = await get_user_by_name(db_session=PgDB, user_name=data.user_name)
-    if not user:
-        return JSONResponse(
-            status_code=status.HTTP_404_NOT_FOUND,
-            content={"message": "User not found"}
-        )
 
     # Check if user is active
     if not user["is_active"]:
@@ -153,11 +148,9 @@ async def login_user(request: Request, data: UserLoginForm, CacheDB: MemcachedDe
             "id": str(user["id"]),
             "user_name": user["user_name"],
             "email": user["email"],
-            "profile_data": user["profile_data"],
             "csrf_token": csrf_token,
             "is_active": user["is_active"],
             "created_at": user["created_at"].isoformat()  # Store created_at as ISO format string
-            
         }).encode("utf-8"),
         exptime=600  # Set session expiration time (10 minutes)
     )
@@ -165,7 +158,7 @@ async def login_user(request: Request, data: UserLoginForm, CacheDB: MemcachedDe
     # Set the session ID and CSRF token in the response cookies
     response = JSONResponse(
         status_code=status.HTTP_200_OK,
-        content={"message": f"User {user['profile_data']['full_name']} logged in successfully", "user": user["user_name"]}
+        content={"message": f"User {user['profile_data']['full_name']} logged in successfully", "user": user["user_name"], "profile_data": user["profile_data"]}
     )
 
     response.set_cookie(
@@ -204,15 +197,12 @@ async def validate_session(user: CurrentUser) -> JSONResponse:
     """
     Validate user session
     """
-    if user:
-        return JSONResponse(
-            status_code=status.HTTP_200_OK,
-            content={"message": "Session is valid, user is authenticated", "user_name": user["user_name"], "profile_data": user["profile_data"]}
-        )
-
     return JSONResponse(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        content={"message": "Session is invalid"}
+        status_code=status.HTTP_200_OK,
+        content={
+            "message": "Session is valid, user is authenticated",
+            "user_name": user["user_name"]
+        }
     )
 
 
@@ -222,12 +212,6 @@ async def logout_user(user: CurrentUser, CacheDB: MemcachedDep) -> JSONResponse:
     """
     Logout user
     """
-    if not user:
-        return JSONResponse(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            content={"message": "User is not authenticated"}
-        )
-
     # Invalidate the session by deleting it from the cache
     await CacheDB.delete(key=str(user["id"]).encode("utf-8"))
 
@@ -255,15 +239,82 @@ async def logout_user(user: CurrentUser, CacheDB: MemcachedDep) -> JSONResponse:
     return response
 
 
+# Get user profile details
+@router.get("/profile", response_class=JSONResponse, tags=["Users", "Profile"], summary="Get user profile details")
+async def get_user_profile_details(user: CurrentUser) -> JSONResponse:
+    """
+    Get user profile details
+    """
+    # Fetch user profile details from the database
+    profile_data = await get_user_profile_details_by_id(db_session=PostgresDep(), user_id=str(user["id"]))
+
+    return JSONResponse(
+        status_code=status.HTTP_200_OK,
+        content={
+            "message": "User profile details retrieved successfully",
+            "user_name": user["user_name"],
+            "profile_data": profile_data
+        }
+    )
+
+
+# Update user profile details
+@router.put("/profile", response_class=JSONResponse, tags=["Users", "Profile"], summary="Update user profile details")
+async def update_user_profile_details(user: CurrentUser, data: dict) -> JSONResponse:
+    """
+    Update user profile details
+    """
+    # Replace user profile details in the database
+    await replace_user_profile_details_by_id(db_session=PostgresDep(), user_id=str(user["id"]), profile_data=data)
+
+    return JSONResponse(
+        status_code=status.HTTP_200_OK,
+        content={
+            "message": "User profile details updated successfully",
+            "profile_data": data
+        }
+    )
+
+
+# Delete user account
+@router.delete("/self", response_class=JSONResponse, tags=["Users"], summary="Delete user account")
+async def delete_user_account(user: CurrentUser, CacheDB: MemcachedDep, PgDB: PostgresDep) -> JSONResponse:
+    """
+    Delete user account
+    """
+    # Delete user from the database
+    await delete_user_by_id(db_session=PgDB, user_id=str(user["id"]))
+
+    # Invalidate the session by deleting it from the cache
+    await CacheDB.delete(key=str(user["id"]).encode("utf-8"))
+
+    # Clear cookies in the response
+    response = JSONResponse(
+        status_code=status.HTTP_200_OK,
+        content={"message": "User account deleted successfully"}
+    )
+
+    response.delete_cookie(
+        key="SESSION_ID",
+        httponly=True,
+        secure=True,
+        samesite="strict",
+        domain=".nekonik.com"
+    )
+    response.delete_cookie(
+        key="IS_SESSION_VALID",
+        httponly=False,
+        secure=True,
+        samesite="strict",
+        domain=".nekonik.com"
+    )
+
+    return response
+
+
 
 # For initial version we will keep all things simple (Keep it simple stupid)
 
 # TODO: User Management
-# - Logout user
-
-# - Get user profile details
-# - Update user profile details
-# - Delete user and all related data
-
 # - Generate API key for user
 # - Validate API key

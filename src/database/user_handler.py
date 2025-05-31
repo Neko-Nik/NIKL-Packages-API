@@ -103,3 +103,54 @@ async def get_user_by_name(db_session: PgSession, user_name: str) -> dict:
         "is_active": user_row["is_active"],
         "created_at": user_row["created_at"]
     }
+
+
+async def get_user_profile_details_by_id(db_session: PgSession, user_id: str) -> dict:
+    """
+    Get user profile details by ID from the database
+    """
+    user_row = await db_session.fetchrow(
+        "SELECT profile_data FROM users WHERE id = $1",
+        user_id
+    )
+    if not user_row:
+        raise All_Exceptions(
+            message=f"User with ID {user_id} does not exist.",
+            status_code=status.HTTP_404_NOT_FOUND
+        )
+
+    return json.loads(user_row["profile_data"])
+
+
+async def replace_user_profile_details_by_id(db_session: PgSession, user_id: str, profile_data: dict) -> None:
+    """
+    Replace user profile details by ID in the database
+    """
+    try:
+        await db_session.execute(
+            "UPDATE users SET profile_data = $1 WHERE id = $2",
+            json.dumps(profile_data), user_id
+        )
+    except Exception as e:
+        logging.error(f"Error while updating user profile details: {e}")
+        raise All_Exceptions(
+            message=f"Error while updating user profile details, please contact support",
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+async def delete_user_by_id(db_session: PgSession, user_id: str) -> None:
+    """
+    Delete user by ID from the database
+    """
+    try:
+        await db_session.execute(
+            "DELETE FROM users WHERE id = $1",
+            user_id
+        )
+    except Exception as e:
+        logging.error(f"Error while deleting user: {e}")
+        raise All_Exceptions(
+            message=f"Error while deleting user, please contact support",
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
