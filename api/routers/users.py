@@ -7,21 +7,50 @@ from src.utils.base.libraries import (
     BackgroundTasks,
     JSONResponse,
     APIRouter,
+    requests,
     Request,
     bcrypt,
     base64,
     status,
     uuid,
-    json
+    json,
+    logging
 )
 from src.database import PostgresDep, MemcachedDep, create_new_user, get_user_by_name
+from src.utils.base.constants import MAX_AGE_OF_CACHE, HCAPTCHA_SECRET_KEY
 from src.utils.models import UserRegForm, UserLoginForm
-from src.utils.base.constants import MAX_AGE_OF_CACHE
 from src.main import CurrentUser
 
 
 # Router
 router = APIRouter()
+
+
+def _verify_hcaptcha(remoteip: str, token: str) -> bool:
+    """
+    Verify hCaptcha token
+    This function should implement the logic to verify the hCaptcha token with the hCaptcha service.
+    For now, it returns True for demonstration purposes.
+    """
+    try:
+        response = requests.post(
+            url="https://hcaptcha.com/siteverify",
+            data={
+                "secret": HCAPTCHA_SECRET_KEY,
+                "remoteip": remoteip,
+                "response": token
+            }
+        )
+        response_data = response.json()
+        if response.status_code != 200:
+            logging.error(f"hCaptcha verification failed with status code: {response.status_code}")
+            return False
+
+        return dict(response_data).get("success", False)
+
+    except Exception as e:
+        logging.error(f"Error verifying hCaptcha: {e}", exc_info=True)
+        return False
 
 
 def _hash_password(password: str) -> str:
@@ -53,7 +82,12 @@ async def create_user(request: Request, data: UserRegForm, bg_task: BackgroundTa
     """
     Create a new user
     """
-    # TODO: Validate hCaptcha (https://docs.hcaptcha.com/configuration)
+    # Verify hCaptcha
+    if not _verify_hcaptcha(remoteip=request.client.host, token=data.hcaptcha_token):
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content={"message": "Invalid hCaptcha token"}
+        )
 
     await create_new_user(
         db_session=PgDB,
@@ -76,10 +110,17 @@ async def create_user(request: Request, data: UserRegForm, bg_task: BackgroundTa
 
 # Login user
 @router.post("/login", response_class=JSONResponse, tags=["Users"], summary="Login user")
-async def login_user(data: UserLoginForm, CacheDB: MemcachedDep, PgDB: PostgresDep) -> JSONResponse:
+async def login_user(request: Request, data: UserLoginForm, CacheDB: MemcachedDep, PgDB: PostgresDep) -> JSONResponse:
     """
     Login user
     """
+    # Verify hCaptcha
+    if not _verify_hcaptcha(remoteip=request.client.host, token=data.hcaptcha_token):
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content={"message": "Invalid hCaptcha token"}
+        )
+
     # Fetch user from database
     user = await get_user_by_name(db_session=PgDB, user_name=data.user_name)
     if not user:

@@ -17,6 +17,7 @@ class UserRegForm(BaseModel):
     email: str = Field(..., title="Email", description="Email of the user")
     password: str = Field(..., title="Password", description="Base64 encoded password of the user")
     full_name: str = Field(..., title="Full Name", description="Full name of the user")
+    hcaptcha_token: str = Field(..., title="hCaptcha Token", description="hCaptcha token for verification")
 
     class Config:
         """
@@ -27,7 +28,8 @@ class UserRegForm(BaseModel):
                 "user_name": "niklang",
                 "email": "admin@nekonik.com",
                 "password": "Base64-Encoded-Password",
-                "full_name": "Neko Nik"
+                "full_name": "Neko Nik",
+                "hcaptcha_token": "hCaptcha-Token"
             }
         }
 
@@ -41,6 +43,7 @@ class UserLoginForm(BaseModel):
     """
     user_name: str = Field(..., title="Username", description="Username of the user")
     password: str = Field(..., title="Password", description="Base64 encoded password of the user")
+    hcaptcha_token: str = Field(..., title="hCaptcha Token", description="hCaptcha token for verification")
 
     class Config:
         """
@@ -49,6 +52,7 @@ class UserLoginForm(BaseModel):
         json_schema_extra = {
             "example": {
                 "user_name": "niklang",
-                "password": "Base64-Encoded-Password"
+                "password": "Base64-Encoded-Password",
+                "hcaptcha_token": "hCaptcha-Token"
             }
         }

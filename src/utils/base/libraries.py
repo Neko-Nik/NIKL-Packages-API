@@ -24,6 +24,7 @@ import asyncpg
 from datetime import datetime
 from functools import wraps
 import subprocess
+import requests
 import base64
 import bcrypt
 import uuid
