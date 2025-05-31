@@ -3,7 +3,7 @@ All the Database related functions are defined here
 """
 
 from .connections import PostgresDep, MemcachedDep, lifespan
-from .user_handler import create_new_user
+from .user_handler import create_new_user, get_user_by_name
 
 
 __version__ = "v2.8.0-phoenix-release"
@@ -14,7 +14,8 @@ __annotations__ = {
     "PostgresDep": "PostgresSQL connection dependency for FastAPI",
     "MemcachedDep": "Memcached connection dependency for FastAPI",
     "lifespan": "Lifespan context manager for FastAPI to manage database connections",
-    "create_new_user": "Function to create a new user in the database"
+    "create_new_user": "Function to create a new user in the database",
+    "get_user_by_name": "Function to get user details by user name"
 }
 
 
@@ -22,5 +23,6 @@ __all__ = [
     "PostgresDep",
     "MemcachedDep",
     "lifespan",
-    "create_new_user"
+    "create_new_user",
+    "get_user_by_name"
 ]

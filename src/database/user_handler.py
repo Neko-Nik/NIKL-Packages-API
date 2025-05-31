@@ -15,11 +15,11 @@ async def _raise_check_user_exists(db_session: PgSession, user_name: str, user_e
     Check if the user already exists in the database
     """
     user_name_row = await db_session.fetchrow(
-        "SELECT * FROM users WHERE user_name = $1",
+        "SELECT id FROM users WHERE user_name = $1",
         user_name
     )
     user_email_row = await db_session.fetchrow(
-        "SELECT * FROM users WHERE email = $1",
+        "SELECT id FROM users WHERE email = $1",
         user_email
     )
     if user_name_row:
@@ -36,7 +36,7 @@ async def _raise_check_user_exists(db_session: PgSession, user_name: str, user_e
                 message=f"User with username {user_name} does not exist.",
                 status_code=status.HTTP_404_NOT_FOUND
             )
-        
+
     if user_email_row:
         # If user with the same email exists
         if raise_exception_if_exists:
@@ -77,3 +77,29 @@ async def create_new_user(db_session: PgSession, id: str, email: str, user_name:
             message=f"Error while creating new user, please contact support",
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
+
+
+async def get_user_by_name(db_session: PgSession, user_name: str) -> dict:
+    """
+    Get user by ID from the database
+    """
+    user_row = await db_session.fetchrow(
+        "SELECT * FROM users WHERE user_name = $1",
+        user_name
+    )
+
+    if not user_row:
+        raise All_Exceptions(
+            message=f"User with username {user_name} does not exist.",
+            status_code=status.HTTP_404_NOT_FOUND
+        )
+
+    return {
+        "id": user_row["id"],
+        "user_name": user_row["user_name"],
+        "email": user_row["email"],
+        "hashed_password": user_row["hashed_password"],
+        "profile_data": json.loads(user_row["profile_data"]),
+        "is_active": user_row["is_active"],
+        "created_at": user_row["created_at"]
+    }

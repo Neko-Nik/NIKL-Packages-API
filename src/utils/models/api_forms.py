@@ -25,7 +25,8 @@ class UserRegForm(BaseModel):
         json_schema_extra = {
             "example": {
                 "user_name": "niklang",
-                "email": "nik@nekonik.com",
-                "password": "TmVrbw=="  # base64 encoded password
+                "email": "admin@nekonik.com",
+                "password": "base64 encoded password -> TmVrbw==",  # base64 encoded password
+                "full_name": "Neko Nik"
             }
         }
