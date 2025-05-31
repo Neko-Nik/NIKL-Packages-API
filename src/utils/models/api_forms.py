@@ -26,7 +26,29 @@ class UserRegForm(BaseModel):
             "example": {
                 "user_name": "niklang",
                 "email": "admin@nekonik.com",
-                "password": "base64 encoded password -> TmVrbw==",  # base64 encoded password
+                "password": "Base64-Encoded-Password",
                 "full_name": "Neko Nik"
+            }
+        }
+
+
+class UserLoginForm(BaseModel):
+    """
+    User Login Form model
+    This model is used to validate the user login form data
+    user_name: Username of the user
+    base64_password: Base64 encoded password of the user
+    """
+    user_name: str = Field(..., title="Username", description="Username of the user")
+    password: str = Field(..., title="Password", description="Base64 encoded password of the user")
+
+    class Config:
+        """
+        Configuration for the model
+        """
+        json_schema_extra = {
+            "example": {
+                "user_name": "niklang",
+                "password": "Base64-Encoded-Password"
             }
         }
