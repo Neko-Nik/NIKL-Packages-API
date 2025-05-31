@@ -15,10 +15,9 @@ async def get_current_user_session_details(request: Request, CacheDB: MemcachedD
     if not session_id:
         raise All_Exceptions(message="Session ID not found", status_code=status.HTTP_406_NOT_ACCEPTABLE)
 
-    # Uncomment this line to check CSRF token TODO: Disabled temporarily so that we can test the API
-    # csrf_token = request.headers.get("X-CSRF-Token")
-    # if not csrf_token:
-    #     raise All_Exceptions(message="CSRF token not found", status_code=status.HTTP_406_NOT_ACCEPTABLE)
+    csrf_token = request.headers.get("X-CSRF-Token")
+    if not csrf_token:
+        raise All_Exceptions(message="CSRF token not found", status_code=status.HTTP_406_NOT_ACCEPTABLE)
 
     user_data_bytes = await CacheDB.get(session_id.encode("utf-8"))
     if not user_data_bytes:
@@ -26,9 +25,8 @@ async def get_current_user_session_details(request: Request, CacheDB: MemcachedD
 
     user_data = json.loads(user_data_bytes.decode("utf-8"))
 
-    # Uncomment this line to check CSRF token TODO: Disabled temporarily so that we can test the API
-    # if user_data["csrf_token"] != csrf_token:
-    #     raise All_Exceptions(message="CSRF token mismatch", status_code=status.HTTP_401_UNAUTHORIZED)
+    if user_data["csrf_token"] != csrf_token:
+        raise All_Exceptions(message="CSRF token mismatch", status_code=status.HTTP_401_UNAUTHORIZED)
 
     return user_data
 

@@ -216,14 +216,49 @@ async def validate_session(user: CurrentUser) -> JSONResponse:
     )
 
 
+# Logout user
+@router.delete("/logout", response_class=JSONResponse, tags=["Users"], summary="Logout user")
+async def logout_user(user: CurrentUser, CacheDB: MemcachedDep) -> JSONResponse:
+    """
+    Logout user
+    """
+    if not user:
+        return JSONResponse(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            content={"message": "User is not authenticated"}
+        )
+
+    # Invalidate the session by deleting it from the cache
+    await CacheDB.delete(key=str(user["id"]).encode("utf-8"))
+
+    # Clear cookies in the response
+    response = JSONResponse(
+        status_code=status.HTTP_200_OK,
+        content={"message": "Logout successful, session destroyed"}
+    )
+
+    response.delete_cookie(
+        key="SESSION_ID",
+        httponly=True,
+        secure=True,
+        samesite="strict",
+        domain=".nekonik.com"
+    )
+    response.delete_cookie(
+        key="IS_SESSION_VALID",
+        httponly=False,
+        secure=True,
+        samesite="strict",
+        domain=".nekonik.com"
+    )
+
+    return response
+
 
 
 # For initial version we will keep all things simple (Keep it simple stupid)
 
 # TODO: User Management
-# - Create new user (Registration) with email verification and captcha
-# - Login user with username and password (not email)
-# - Validate session 
 # - Logout user
 
 # - Get user profile details
