@@ -80,3 +80,31 @@ class ApiKeyForm(BaseModel):
                 "api_key_description": "This is my API key for accessing the API"
             }
         }
+
+
+class BasePackageForm(BaseModel):
+    """
+    Base Package Form model
+    This model is used to validate the base package form data
+    package_name: Name of the base package
+    package_description: Description of the base package
+    metadata: Additional metadata for the base package
+    """
+    package_name: str = Field(..., title="Package Name", description="Name of the base package")
+    package_description: str = Field(..., title="Package Description", description="Description of the base package")
+    metadata: dict = Field(..., title="Metadata", description="Additional metadata for the base package")
+
+    class Config:
+        """
+        Configuration for the model
+        """
+        json_schema_extra = {
+            "example": {
+                "package_name": "My Base Package",
+                "package_description": "This is my base package",
+                "metadata": {
+                    "website": "https://NekoNik.com",
+                    "repository": "https://github.com/Neko-Nik"
+                }
+            }
+        }

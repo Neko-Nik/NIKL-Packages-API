@@ -3,7 +3,7 @@ All the models used in the API are defined here
 """
 
 from .generic import All_Exceptions, Error
-from .api_forms import UserRegForm, UserLoginForm, ApiKeyForm
+from .api_forms import UserRegForm, UserLoginForm, ApiKeyForm, BasePackageForm
 
 
 __version__ = "v1.0.0-phoenix-release"
@@ -15,7 +15,8 @@ __annotations__ = {
     "Error": "Class for handling wrong input exceptions",
     "UserRegForm": "Model for user registration form",
     "UserLoginForm": "Model for user login form",
-    "ApiKeyForm": "Model for API key form"
+    "ApiKeyForm": "Model for API key form",
+    "BasePackageForm": "Model for base package form"
 }
 
 
@@ -24,5 +25,6 @@ __all__ = [
     "Error",
     "UserRegForm",
     "UserLoginForm",
-    "ApiKeyForm"
+    "ApiKeyForm",
+    "BasePackageForm"
 ]

@@ -15,9 +15,17 @@ from .user_handler import (
     delete_api_key_by_id,
     get_api_key_details
 )
+from .package_handler import (
+    create_base_package,
+    get_base_package_details_by_id,
+    search_base_packages,
+    create_versioned_package,
+    get_versioned_package_details,
+    get_all_versioned_packages
+)
 
 
-__version__ = "v2.8.0-phoenix-release"
+__version__ = "v3.1.2-phoenix-release"
 
 
 __annotations__ = {
@@ -34,7 +42,13 @@ __annotations__ = {
     "list_api_keys_for_user": "Function to list all API keys for a user",
     "edit_api_key_details_by_id": "Function to edit API key details by API key ID",
     "delete_api_key_by_id": "Function to delete an API key by API key ID",
-    "get_api_key_details": "Function to get API key details by API key ID"
+    "get_api_key_details": "Function to get API key details by API key ID",
+    "create_base_package": "Function to create a new base package",
+    "get_base_package_details_by_id": "Function to get base package details by ID",
+    "search_base_packages": "Function to search for base packages by name or description",
+    "create_versioned_package": "Function to create a new versioned package",
+    "get_versioned_package_details": "Function to get versioned package details by ID",
+    "get_all_versioned_packages": "Function to get all versioned packages for a base package"
 }
 
 
@@ -51,5 +65,11 @@ __all__ = [
     "list_api_keys_for_user",
     "edit_api_key_details_by_id",
     "delete_api_key_by_id",
-    "get_api_key_details"
+    "get_api_key_details",
+    "create_base_package",
+    "get_base_package_details_by_id",
+    "search_base_packages",
+    "create_versioned_package",
+    "get_versioned_package_details",
+    "get_all_versioned_packages"
 ]

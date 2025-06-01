@@ -9,7 +9,7 @@ from src.utils.base.libraries import (
     FastAPI,
     Request
 )
-from .routers import users_router
+from .routers import users_router, packages_router
 from src.utils.models import All_Exceptions
 from src.database import lifespan
 
@@ -18,7 +18,7 @@ from src.database import lifespan
 app = FastAPI(
     title="Nik-Lang Package Management API",
     description="This is the API for the Nik-Lang Package Management System",
-    version="1.0.0",
+    version="1.1.2",
     # docs_url=None,
     # redoc_url=None,
     docs_url="/docs",
@@ -47,3 +47,4 @@ async def input_data_exception_handler(request: Request, exc: All_Exceptions):
 
 #    Endpoints    #
 app.include_router(router=users_router, prefix="/users")
+app.include_router(router=packages_router, prefix="/packages")
