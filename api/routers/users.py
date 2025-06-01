@@ -16,9 +16,21 @@ from src.utils.base.libraries import (
     json,
     logging
 )
-from src.database import PostgresDep, MemcachedDep, create_new_user, get_user_by_name, get_user_profile_details_by_id, replace_user_profile_details_by_id, delete_user_by_id
+from src.database import (
+    PostgresDep,
+    MemcachedDep,
+    create_new_user,
+    get_user_by_name,
+    get_user_profile_details_by_id,
+    replace_user_profile_details_by_id,
+    delete_user_by_id,
+    create_api_key_for_user,
+    list_api_keys_for_user,
+    edit_api_key_details_by_id,
+    delete_api_key_by_id
+)
 from src.utils.base.constants import MAX_AGE_OF_CACHE, HCAPTCHA_SECRET_KEY
-from src.utils.models import UserRegForm, UserLoginForm
+from src.utils.models import UserRegForm, UserLoginForm, ApiKeyForm
 from src.main import CurrentUser
 
 
@@ -312,9 +324,100 @@ async def delete_user_account(user: CurrentUser, CacheDB: MemcachedDep, PgDB: Po
     return response
 
 
+# List API keys for user
+@router.get("/api-keys", response_class=JSONResponse, tags=["Users", "API Keys"], summary="List API keys for user")
+async def list_api_keys_for_user_paginated(user: CurrentUser, PgDB: PostgresDep, page: int = 1, limit: int = 10) -> JSONResponse:
+    """
+    List API keys for user with pagination
+    """
+    api_keys = await list_api_keys_for_user(db_session=PgDB, user_id=str(user["id"]), page=page, limit=limit)
 
-# For initial version we will keep all things simple (Keep it simple stupid)
+    return JSONResponse(
+        status_code=status.HTTP_200_OK,
+        content={
+            "message": "API keys retrieved successfully",
+            "api_keys": api_keys
+        }
+    )
 
-# TODO: User Management
-# - Generate API key for user
-# - Validate API key
+
+# Create a new API key for user
+@router.post("/api-keys", response_class=JSONResponse, tags=["Users", "API Keys"], summary="Create a new API key for user")
+async def create_api_key_for_user(user: CurrentUser, data: ApiKeyForm, PgDB: PostgresDep) -> JSONResponse:
+    """
+    Create a new API key for user
+    """
+    # Generate a new API key ID
+    api_key_id = str(uuid.uuid4())
+    api_key = str(uuid.uuid4())
+    details = {
+        "name": data.api_key_name,
+        "description": data.api_key_description
+    }
+
+    # Create a new API key for the user in the database
+    await create_api_key_for_user(
+        db_session=PgDB,
+        user_id=str(user["id"]),
+        api_key_id=api_key_id,
+        api_key=api_key,
+        details=details
+    )
+
+    return JSONResponse(
+        status_code=status.HTTP_201_CREATED,
+        content={
+            "message": "API key created successfully, please store it securely. It will not be shown again.",
+            "api_key_id": api_key_id,
+            "api_key": api_key,
+            "details": details
+        }
+    )
+
+
+# Edit API key details
+@router.put("/api-keys/{api_key_id}", response_class=JSONResponse, tags=["Users", "API Keys"], summary="Edit API key details")
+async def replace_api_key_details(user: CurrentUser, api_key_id: str, data: ApiKeyForm, PgDB: PostgresDep) -> JSONResponse:
+    """
+    Edit API key details
+    """
+    # Update API key details in the database
+    await edit_api_key_details_by_id(
+        db_session=PgDB,
+        user_id=str(user["id"]),
+        api_key_id=api_key_id,
+        new_details={
+            "name": data.api_key_name,
+            "description": data.api_key_description
+        }
+    )
+
+    return JSONResponse(
+        status_code=status.HTTP_200_OK,
+        content={
+            "message": "API key details updated successfully",
+            "api_key_id": api_key_id,
+            "details": {
+                "name": data.api_key_name,
+                "description": data.api_key_description
+            }
+        }
+    )
+
+
+# Delete API key
+@router.delete("/api-keys/{api_key_id}", response_class=JSONResponse, tags=["Users", "API Keys"], summary="Delete API key")
+async def delete_api_key(user: CurrentUser, api_key_id: str, PgDB: PostgresDep) -> JSONResponse:
+    """
+    Delete API key
+    """
+    # Delete API key from the database
+    await delete_api_key_by_id(db_session=PgDB, user_id=str(user["id"]), api_key_id=api_key_id)
+
+    return JSONResponse(
+        status_code=status.HTTP_200_OK,
+        content={
+            "message": "API key deleted successfully",
+            "api_key_id": api_key_id
+        }
+    )

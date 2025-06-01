@@ -154,3 +154,106 @@ async def delete_user_by_id(db_session: PgSession, user_id: str) -> None:
             message=f"Error while deleting user, please contact support",
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
+
+
+async def create_api_key_for_user(db_session: PgSession, user_id: str, api_key_id: str, api_key: str, details: dict) -> None:
+    """
+    Create a new API key for a user in the database
+    """
+    try:
+        await db_session.execute(
+            "INSERT INTO api_keys (id, user_id, api_key, details) "
+            "VALUES ($1, $2, $3, $4)",
+            api_key_id, user_id, api_key, json.dumps(details)
+        )
+
+    except Exception as e:
+        logging.error(f"Error while creating API key for user: {e}")
+        raise All_Exceptions(
+            message=f"Error while creating API key for user, please contact support",
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+async def list_api_keys_for_user(db_session: PgSession, user_id: str, page: int = 1, page_size: int = 10) -> list:
+    """
+    List API keys for a user from the database
+    """
+    offset = (page - 1) * page_size
+    api_keys_rows = await db_session.fetch(
+        "SELECT * FROM api_keys WHERE user_id = $1 ORDER BY created_at DESC LIMIT $2 OFFSET $3",
+        user_id, page_size, offset
+    )
+    if not api_keys_rows:
+        raise All_Exceptions(
+            message=f"No API keys found for user with ID {user_id}.",
+            status_code=status.HTTP_404_NOT_FOUND
+        )
+
+    return [
+        {
+            "id": row["id"],
+            "user_id": row["user_id"],
+            "api_key": row["api_key"][:4] + "****" + row["api_key"][-4:],
+            "details": json.loads(row["details"]),
+            "created_at": row["created_at"]
+        } for row in api_keys_rows
+    ]
+
+
+async def edit_api_key_details_by_id(db_session: PgSession, api_key_id: str, user_id: str, new_details: dict) -> None:
+    """
+    Edit API key details by ID in the database
+    """
+    try:
+        await db_session.execute(
+            "UPDATE api_keys SET details = $1 WHERE id = $2 AND user_id = $3",
+            json.dumps(new_details), api_key_id, user_id
+        )
+    except Exception as e:
+        logging.error(f"Error while editing API key details: {e}")
+        raise All_Exceptions(
+            message=f"Error while editing API key details, please contact support",
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+async def delete_api_key_by_id(db_session: PgSession, api_key_id: str, user_id: str) -> None:
+    """
+    Delete API key by ID from the database
+    """
+    try:
+        await db_session.execute(
+            "DELETE FROM api_keys WHERE id = $1 AND user_id = $2",
+            api_key_id, user_id
+        )
+    except Exception as e:
+        logging.error(f"Error while deleting API key: {e}")
+        raise All_Exceptions(
+            message=f"Error while deleting API key, please contact support",
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+async def get_api_key_details(db_session: PgSession, api_key: str) -> dict:
+    """
+    Get API key details from the database (Auth Middleware) [Internal Use Only]
+    """
+    api_key_row = await db_session.fetchrow(
+        "SELECT * FROM api_keys WHERE api_key = $1",
+        api_key
+    )
+
+    if not api_key_row:
+        raise All_Exceptions(
+            message=f"API key does not exist.",
+            status_code=status.HTTP_404_NOT_FOUND
+        )
+
+    return {
+        "id": api_key_row["id"],
+        "user_id": api_key_row["user_id"],
+        "api_key": api_key_row["api_key"],
+        "details": json.loads(api_key_row["details"]),
+        "created_at": api_key_row["created_at"]
+    }

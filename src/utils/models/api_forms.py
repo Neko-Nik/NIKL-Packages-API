@@ -56,3 +56,27 @@ class UserLoginForm(BaseModel):
                 "hcaptcha_token": "hCaptcha-Token"
             }
         }
+
+
+class ApiKeyForm(BaseModel):
+    """
+    API Key Form model
+    This model is used to validate the API key form data
+    api_key_id: Unique identifier for the API key
+    api_key_name: Name of the API key
+    api_key_description: Description of the API key
+    """
+    api_key_id: str = Field("", title="API Key ID", description="Unique identifier for the API key")
+    api_key_name: str = Field(..., title="API Key Name", description="Name of the API key")
+    api_key_description: str = Field(..., title="API Key Description", description="Description of the API key")
+
+    class Config:
+        """
+        Configuration for the model
+        """
+        json_schema_extra = {
+            "example": {
+                "api_key_name": "My API Key",
+                "api_key_description": "This is my API key for accessing the API"
+            }
+        }
