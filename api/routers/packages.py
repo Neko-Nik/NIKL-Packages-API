@@ -110,7 +110,7 @@ async def get_versioned_package_details_endpoint(package_id: str, PgDB: Postgres
 
 
 # Get all versioned packages
-@router.get("/all-versioned", response_class=JSONResponse, tags=["Packages"], summary="Get all versioned packages")
+@router.get("/versioned-all", response_class=JSONResponse, tags=["Packages"], summary="Get all versioned packages")
 async def get_all_versioned_packages_endpoint(base_package_id: str, PgDB: PostgresDep, page: int = 1, limit: int = 10) -> JSONResponse:
     """
     Get all versioned packages with pagination
