@@ -45,3 +45,20 @@ async def create_new_base_package(data: BasePackageForm, user: CurrentUser, PgDB
         status_code=status.HTTP_201_CREATED,
         content={"message": "Base package created successfully"}
     )
+
+
+# Create a new versioned package
+@router.post("/versioned", response_class=JSONResponse, tags=["Packages"], summary="Create a new versioned package")
+async def create_new_versioned_package() -> JSONResponse:
+    """
+    Create a new versioned package
+    """
+    # TODO: Implement the logic for creating a new versioned package
+    # Accept a file upload along with X-API-Key
+    # Extract the file and get the metadata
+    # Parse it properly and create the versioned package
+    # Store the file in the file system
+    return JSONResponse(
+        status_code=status.HTTP_501_NOT_IMPLEMENTED,
+        content={"message": "This endpoint is not implemented yet"}
+    )
