@@ -83,6 +83,7 @@ CREATE TABLE base_packages (
     id UUID PRIMARY KEY,
     package_name VARCHAR(100) NOT NULL UNIQUE,
     package_description TEXT,
+    latest_version_id VARCHAR(20) REFERENCES versioned_packages(id) ON DELETE SET NULL,
     registered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     metadata JSONB, -- stores additional metadata about the package
     user_id UUID NOT NULL REFERENCES users(id)

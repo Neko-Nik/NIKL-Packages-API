@@ -118,7 +118,8 @@ async def search_base_packages(db_session: PgSession, search_query: str, page: i
             "id": row["id"],
             "package_name": row["package_name"],
             "package_description": row["package_description"],
-            "registered_at": row["registered_at"]
+            "registered_at": row["registered_at"],
+            "latest_version": row["latest_version_id"]
         } for row in packages
     ], total_count
 
