@@ -89,7 +89,7 @@ def _hash_password(password: str) -> str:
 
 
 # Create a new user
-@router.post("/register", response_class=JSONResponse, tags=["Users"], summary="Create a new user")
+@router.post("/register", response_class=JSONResponse, tags=["Users", "Auth"], summary="Create a new user")
 async def create_user(request: Request, data: UserRegForm, bg_task: BackgroundTasks, PgDB: PostgresDep) -> JSONResponse:
     """
     Create a new user
@@ -121,7 +121,7 @@ async def create_user(request: Request, data: UserRegForm, bg_task: BackgroundTa
 
 
 # Login user
-@router.post("/login", response_class=JSONResponse, tags=["Users"], summary="Login user")
+@router.post("/login", response_class=JSONResponse, tags=["Users", "Auth"], summary="Login user")
 async def login_user(request: Request, data: UserLoginForm, CacheDB: MemcachedDep, PgDB: PostgresDep) -> JSONResponse:
     """
     Login user
@@ -204,7 +204,7 @@ async def login_user(request: Request, data: UserLoginForm, CacheDB: MemcachedDe
 
 
 # Validate session
-@router.get("/validate-session", response_class=JSONResponse, tags=["Users"], summary="Validate user session")
+@router.get("/validate-session", response_class=JSONResponse, tags=["Users", "Auth"], summary="Validate user session")
 async def validate_session(user: CurrentUser) -> JSONResponse:
     """
     Validate user session
@@ -219,7 +219,7 @@ async def validate_session(user: CurrentUser) -> JSONResponse:
 
 
 # Logout user
-@router.delete("/logout", response_class=JSONResponse, tags=["Users"], summary="Logout user")
+@router.delete("/logout", response_class=JSONResponse, tags=["Users", "Auth"], summary="Logout user")
 async def logout_user(user: CurrentUser, CacheDB: MemcachedDep) -> JSONResponse:
     """
     Logout user
@@ -289,7 +289,7 @@ async def update_user_profile_details(user: CurrentUser, data: dict) -> JSONResp
 
 
 # Delete user account
-@router.delete("/self", response_class=JSONResponse, tags=["Users"], summary="Delete user account")
+@router.delete("/self", response_class=JSONResponse, tags=["Users", "Auth"], summary="Delete user account")
 async def delete_user_account(user: CurrentUser, CacheDB: MemcachedDep, PgDB: PostgresDep) -> JSONResponse:
     """
     Delete user account
