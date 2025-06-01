@@ -70,7 +70,7 @@ async def get_base_package_details_by_id(db_session: PgSession, package_id: str)
     }
 
 
-async def search_base_packages(db_session: PgSession, search_query: str, page: int = 1, page_size: int = 10) -> list:
+async def search_base_packages(db_session: PgSession, search_query: str, page: int = 1, page_size: int = 10) -> tuple[list, int]:
     """
     Search for base packages by name or description
     """
@@ -91,6 +91,13 @@ async def search_base_packages(db_session: PgSession, search_query: str, page: i
             page_size,
             offset
         )
+        total_count_row = await db_session.fetchrow(
+            "SELECT COUNT(*) FROM base_packages WHERE package_name ILIKE $1 OR package_description ILIKE $1",
+            search_pattern
+        )
+        total_count = total_count_row["count"]
+        if total_count is None:
+            total_count = 0
 
     else:
         # If no search query is provided, return all packages
@@ -99,6 +106,12 @@ async def search_base_packages(db_session: PgSession, search_query: str, page: i
             page_size,
             offset
         )
+        total_count_row = await db_session.fetchrow(
+            "SELECT COUNT(*) FROM base_packages"
+        )
+        total_count = total_count_row["count"]
+        if total_count is None:
+            total_count = 0
 
     return [
         {
@@ -107,7 +120,7 @@ async def search_base_packages(db_session: PgSession, search_query: str, page: i
             "package_description": row["package_description"],
             "registered_at": row["registered_at"]
         } for row in packages
-    ]
+    ], total_count
 
 
 async def create_versioned_package(db_session: PgSession, user_id: str, base_package_id: str, version: str, file_path: str, metadata: dict) -> None:

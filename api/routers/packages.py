@@ -49,7 +49,7 @@ async def create_new_base_package(data: BasePackageForm, user: CurrentUser, PgDB
 
 # Create a new versioned package
 @router.post("/versioned", response_class=JSONResponse, tags=["Packages"], summary="Create a new versioned package")
-async def create_new_versioned_package() -> JSONResponse:
+async def create_new_versioned_package(user: CurrentUser, PgDB: PostgresDep) -> JSONResponse:
     """
     Create a new versioned package
     """
@@ -61,4 +61,64 @@ async def create_new_versioned_package() -> JSONResponse:
     return JSONResponse(
         status_code=status.HTTP_501_NOT_IMPLEMENTED,
         content={"message": "This endpoint is not implemented yet"}
+    )
+
+
+# Get base package details by ID
+@router.get("/base/{package_id}", response_class=JSONResponse, tags=["Packages"], summary="Get base package details by ID")
+async def get_base_package_details(package_id: str, PgDB: PostgresDep) -> JSONResponse:
+    """
+    Get base package details by ID
+    """
+    # Fetch the base package details from the database
+    package_details = await get_base_package_details_by_id(db_session=PgDB, package_id=package_id)
+
+    return JSONResponse(
+        status_code=status.HTTP_200_OK,
+        content=package_details
+    )
+
+
+# Search base packages
+@router.get("/base/search", response_class=JSONResponse, tags=["Packages"], summary="Search base packages")
+async def search_base_packages_endpoint(query: str, PgDB: PostgresDep, page: int = 1, limit: int = 10) -> JSONResponse:
+    """
+    Search base packages by query
+    """
+    # Search for base packages in the database
+    packages, total_count = await search_base_packages(db_session=PgDB, search_query=query, page=page, page_size=limit)
+
+    return JSONResponse(
+        status_code=status.HTTP_200_OK,
+        content={"packages": packages, "total_count": total_count, "total_pages": (total_count + limit - 1) // limit}
+    )
+
+
+# Get versioned package details
+@router.get("/versioned/{package_id}", response_class=JSONResponse, tags=["Packages"], summary="Get versioned package details by ID")
+async def get_versioned_package_details_endpoint(package_id: str, PgDB: PostgresDep) -> JSONResponse:
+    """
+    Get versioned package details by ID
+    """
+    # Fetch the versioned package details from the database
+    package_details = await get_versioned_package_details(db_session=PgDB, package_id=package_id)
+
+    return JSONResponse(
+        status_code=status.HTTP_200_OK,
+        content=package_details
+    )
+
+
+# Get all versioned packages
+@router.get("/all-versioned", response_class=JSONResponse, tags=["Packages"], summary="Get all versioned packages")
+async def get_all_versioned_packages_endpoint(base_package_id: str, PgDB: PostgresDep, page: int = 1, limit: int = 10) -> JSONResponse:
+    """
+    Get all versioned packages with pagination
+    """
+    # Fetch all versioned packages from the database
+    packages, total_count = await get_all_versioned_packages(db_session=PgDB, base_package_id=base_package_id, page=page, page_size=limit)
+
+    return JSONResponse(
+        status_code=status.HTTP_200_OK,
+        content={"packages": packages, "total_count": total_count, "total_pages": (total_count + limit - 1) // limit}
     )
