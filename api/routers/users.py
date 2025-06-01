@@ -104,7 +104,7 @@ async def create_user(request: Request, data: UserRegForm, bg_task: BackgroundTa
     await create_new_user(
         db_session=PgDB,
         id=str(uuid.uuid4()),
-        email=data.email,
+        email=data.email.lower(),
         user_name=data.user_name,
         hashed_password=_hash_password(data.password),
         profile_data={
@@ -265,6 +265,7 @@ async def get_user_profile_details(user: CurrentUser) -> JSONResponse:
         content={
             "message": "User profile details retrieved successfully",
             "user_name": user["user_name"],
+            "email": user["email"],
             "profile_data": profile_data
         }
     )
