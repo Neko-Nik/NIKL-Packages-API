@@ -5,12 +5,13 @@ This module contains the API endpoints for user management, including user regis
 
 from src.utils.base.libraries import (
     JSONResponse,
+    UploadFile,
     APIRouter,
+    Request,
     status
 )
 from src.database import (
     PostgresDep,
-    MemcachedDep,
     create_base_package,
     get_base_package_details_by_id,
     search_base_packages,
@@ -48,8 +49,8 @@ async def create_new_base_package(data: BasePackageForm, user: CurrentUser, PgDB
 
 
 # Create a new versioned package
-@router.post("/versioned", response_class=JSONResponse, tags=["Packages"], summary="Create a new versioned package")
-async def create_new_versioned_package(user: CurrentUser, PgDB: PostgresDep) -> JSONResponse:
+@router.post("/versioned/upload", response_class=JSONResponse, tags=["Packages"], summary="Create a new versioned package")
+async def create_new_versioned_package(request: Request, file: UploadFile, PgDB: PostgresDep) -> JSONResponse:
     """
     Create a new versioned package
     """
@@ -58,6 +59,29 @@ async def create_new_versioned_package(user: CurrentUser, PgDB: PostgresDep) -> 
     # Extract the file and get the metadata
     # Parse it properly and create the versioned package
     # Store the file in the file system
+
+    # Header of X-API-Key is expected to be present in the request
+    api_key = request.headers.get("X-API-Key")
+    if not api_key:
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content={"message": "API key is required"}
+        )
+    
+    # TODO: Base package is assumed to be created already (do a check)
+
+    api_key = api_key.strip()
+    user = {"id": api_key}  # Simulating user retrieval based on API key
+
+    await create_versioned_package(
+        db_session=PgDB,
+        user_id=str(user["id"]),
+        base_package_id="example_base_package_id",
+        version="1.0.0",
+        file_path="path/to/file",
+        metadata={"example_key": "example_value"}
+    )
+
     return JSONResponse(
         status_code=status.HTTP_501_NOT_IMPLEMENTED,
         content={"message": "This endpoint is not implemented yet"}
