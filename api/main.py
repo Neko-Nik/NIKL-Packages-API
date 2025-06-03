@@ -30,7 +30,12 @@ app = FastAPI(
 # Add CROCS middle ware to allow cross origin requests
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://nikl-pkg.nekonik.com", "http://localhost:3000", "https://api.nikl-pkg.nekonik.com", "http://localhost:5173"],
+    allow_origins=[
+        "https://nikl-pkg.nekonik.com",
+        "http://localhost:3000",
+        "https://api.nikl-pkg.nekonik.com",
+        "http://localhost:5173"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"]

@@ -178,8 +178,8 @@ async def login_user(request: Request, data: UserLoginForm, CacheDB: MemcachedDe
         value=session_id,
         max_age=MAX_AGE_OF_CACHE,
         httponly=True,
-        # secure=True,
-        # samesite="strict",
+        secure=True,
+        samesite="strict",
         # domain=".nekonik.com"
     )
 
@@ -189,8 +189,8 @@ async def login_user(request: Request, data: UserLoginForm, CacheDB: MemcachedDe
         value="true",
         max_age=MAX_AGE_OF_CACHE,
         httponly=False,  # IMPORTANT: Let JS read it
-        # secure=True,
-        # samesite="strict",
+        secure=True,
+        samesite="strict",
         # domain=".nekonik.com"
     )
 
@@ -236,15 +236,15 @@ async def logout_user(user: CurrentUser, CacheDB: MemcachedDep) -> JSONResponse:
     response.delete_cookie(
         key="SESSION_ID",
         httponly=True,
-        # secure=True,
-        # samesite="strict",
+        secure=True,
+        samesite="strict",
         # domain=".nekonik.com"
     )
     response.delete_cookie(
         key="IS_SESSION_VALID",
         httponly=False,
-        # secure=True,
-        # samesite="strict",
+        secure=True,
+        samesite="strict",
         # domain=".nekonik.com"
     )
 
@@ -310,15 +310,15 @@ async def delete_user_account(user: CurrentUser, CacheDB: MemcachedDep, PgDB: Po
     response.delete_cookie(
         key="SESSION_ID",
         httponly=True,
-        # secure=True,
-        # samesite="strict",
+        secure=True,
+        samesite="strict",
         # domain=".nekonik.com"
     )
     response.delete_cookie(
         key="IS_SESSION_VALID",
         httponly=False,
-        # secure=True,
-        # samesite="strict",
+        secure=True,
+        samesite="strict",
         # domain=".nekonik.com"
     )
 
