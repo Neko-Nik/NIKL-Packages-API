@@ -180,7 +180,7 @@ async def login_user(request: Request, data: UserLoginForm, CacheDB: MemcachedDe
         httponly=True,
         secure=True,
         samesite="strict",
-        # domain=".nekonik.com"
+        domain=".nekonik.com"
     )
 
     # Set the logged in status in the Cookie (for JS - to read)
@@ -191,7 +191,7 @@ async def login_user(request: Request, data: UserLoginForm, CacheDB: MemcachedDe
         httponly=False,  # IMPORTANT: Let JS read it
         secure=True,
         samesite="strict",
-        # domain=".nekonik.com"
+        domain=".nekonik.com"
     )
 
     # Set the CSRF token in the response header
@@ -238,14 +238,14 @@ async def logout_user(user: CurrentUser, CacheDB: MemcachedDep) -> JSONResponse:
         httponly=True,
         secure=True,
         samesite="strict",
-        # domain=".nekonik.com"
+        domain=".nekonik.com"
     )
     response.delete_cookie(
         key="IS_SESSION_VALID",
         httponly=False,
         secure=True,
         samesite="strict",
-        # domain=".nekonik.com"
+        domain=".nekonik.com"
     )
 
     return response
@@ -312,14 +312,14 @@ async def delete_user_account(user: CurrentUser, CacheDB: MemcachedDep, PgDB: Po
         httponly=True,
         secure=True,
         samesite="strict",
-        # domain=".nekonik.com"
+        domain=".nekonik.com"
     )
     response.delete_cookie(
         key="IS_SESSION_VALID",
         httponly=False,
         secure=True,
         samesite="strict",
-        # domain=".nekonik.com"
+        domain=".nekonik.com"
     )
 
     return response
