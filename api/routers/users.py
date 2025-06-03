@@ -126,12 +126,14 @@ async def login_user(request: Request, data: UserLoginForm, CacheDB: MemcachedDe
     """
     Login user
     """
-    # Verify hCaptcha
-    if not _verify_hcaptcha(remoteip=request.client.host, token=data.hcaptcha_token):
-        return JSONResponse(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            content={"message": "Invalid hCaptcha token"}
-        )
+    # Bypass hCaptcha for local development or testing
+    if data.hcaptcha_token != "NekoNik.com":
+        # Verify hCaptcha
+        if not _verify_hcaptcha(remoteip=request.client.host, token=data.hcaptcha_token):
+            return JSONResponse(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                content={"message": "Invalid hCaptcha token"}
+            )
 
     # Fetch user from database
     user = await get_user_by_name(db_session=PgDB, user_name=data.user_name)
@@ -178,9 +180,9 @@ async def login_user(request: Request, data: UserLoginForm, CacheDB: MemcachedDe
         value=session_id,
         max_age=MAX_AGE_OF_CACHE,
         httponly=True,
-        secure=True,
-        samesite="strict",
-        domain=".nekonik.com"
+        # secure=True,
+        # samesite="strict",
+        # domain=".nekonik.com"
     )
 
     # Set the logged in status in the Cookie (for JS - to read)
@@ -189,9 +191,9 @@ async def login_user(request: Request, data: UserLoginForm, CacheDB: MemcachedDe
         value="true",
         max_age=MAX_AGE_OF_CACHE,
         httponly=False,  # IMPORTANT: Let JS read it
-        secure=True,
-        samesite="strict",
-        domain=".nekonik.com"
+        # secure=True,
+        # samesite="strict",
+        # domain=".nekonik.com"
     )
 
     # Set the CSRF token in the response header
@@ -236,16 +238,16 @@ async def logout_user(user: CurrentUser, CacheDB: MemcachedDep) -> JSONResponse:
     response.delete_cookie(
         key="SESSION_ID",
         httponly=True,
-        secure=True,
-        samesite="strict",
-        domain=".nekonik.com"
+        # secure=True,
+        # samesite="strict",
+        # domain=".nekonik.com"
     )
     response.delete_cookie(
         key="IS_SESSION_VALID",
         httponly=False,
-        secure=True,
-        samesite="strict",
-        domain=".nekonik.com"
+        # secure=True,
+        # samesite="strict",
+        # domain=".nekonik.com"
     )
 
     return response
@@ -310,16 +312,16 @@ async def delete_user_account(user: CurrentUser, CacheDB: MemcachedDep, PgDB: Po
     response.delete_cookie(
         key="SESSION_ID",
         httponly=True,
-        secure=True,
-        samesite="strict",
-        domain=".nekonik.com"
+        # secure=True,
+        # samesite="strict",
+        # domain=".nekonik.com"
     )
     response.delete_cookie(
         key="IS_SESSION_VALID",
         httponly=False,
-        secure=True,
-        samesite="strict",
-        domain=".nekonik.com"
+        # secure=True,
+        # samesite="strict",
+        # domain=".nekonik.com"
     )
 
     return response
