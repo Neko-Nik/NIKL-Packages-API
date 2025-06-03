@@ -126,14 +126,12 @@ async def login_user(request: Request, data: UserLoginForm, CacheDB: MemcachedDe
     """
     Login user
     """
-    # Bypass hCaptcha for local development or testing
-    if data.hcaptcha_token != "NekoNik.com":
-        # Verify hCaptcha
-        if not _verify_hcaptcha(remoteip=request.client.host, token=data.hcaptcha_token):
-            return JSONResponse(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                content={"message": "Invalid hCaptcha token"}
-            )
+    # # Verify hCaptcha
+    # if not _verify_hcaptcha(remoteip=request.client.host, token=data.hcaptcha_token):
+    #     return JSONResponse(
+    #         status_code=status.HTTP_400_BAD_REQUEST,
+    #         content={"message": "Invalid hCaptcha token"}
+    #     )
 
     # Fetch user from database
     user = await get_user_by_name(db_session=PgDB, user_name=data.user_name)
@@ -255,12 +253,12 @@ async def logout_user(user: CurrentUser, CacheDB: MemcachedDep) -> JSONResponse:
 
 # Get user profile details
 @router.get("/profile", response_class=JSONResponse, tags=["Users", "Profile"], summary="Get user profile details")
-async def get_user_profile_details(user: CurrentUser) -> JSONResponse:
+async def get_user_profile_details(user: CurrentUser, PgDB: PostgresDep) -> JSONResponse:
     """
     Get user profile details
     """
     # Fetch user profile details from the database
-    profile_data = await get_user_profile_details_by_id(db_session=PostgresDep(), user_id=str(user["id"]))
+    profile_data = await get_user_profile_details_by_id(db_session=PgDB, user_id=str(user["id"]))
 
     return JSONResponse(
         status_code=status.HTTP_200_OK,
